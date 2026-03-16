@@ -6,6 +6,27 @@ interface Task {
   priority: string;
   category: string;
   dueDate?: string; // ISO string
+  recurrence?: string; // none | daily | weekly | monthly
+  completed?: boolean;
+}
+
+// Helper to get new Due Date for recurring tasks
+function getNextDate(current: string, recurrence: string): string | null {
+  const d = new Date(current);
+  switch (recurrence) {
+    case 'daily':
+      d.setDate(d.getDate() + 1);
+      break;
+    case 'weekly':
+      d.setDate(d.getDate() + 7);
+      break;
+    case 'monthly':
+      d.setMonth(d.getMonth() + 1);
+      break;
+    default:
+      return null;
+  }
+  return d.toISOString().split('T')[0];
 }
 
 const App: React.FC = () => {
@@ -14,6 +35,7 @@ const App: React.FC = () => {
   const [priorityInput, setPriorityInput] = useState('Medium');
   const [categoryInput, setCategoryInput] = useState('');
   const [dueDateInput, setDueDateInput] = useState('');
+  const [recurrenceInput, setRecurrenceInput] = useState('none');
 
   const addTask = () => {
     if (taskInput) {
@@ -22,12 +44,33 @@ const App: React.FC = () => {
         priority: priorityInput,
         category: categoryInput,
         dueDate: dueDateInput || undefined,
+        recurrence: recurrenceInput,
+        completed: false,
       };
       setTasks([...tasks, newTask]);
       setTaskInput('');
       setCategoryInput('');
       setDueDateInput('');
+      setRecurrenceInput('none');
     }
+  };
+
+  // Mark task complete, and if recurring, create next!
+  const completeTask = (i: number) => {
+    setTasks(tasks => {
+      const t = tasks[i];
+      const updatedTasks = tasks.slice();
+      updatedTasks[i] = { ...t, completed: true };
+      if (t.recurrence && t.recurrence !== 'none' && t.dueDate) {
+        // Schedule new instance
+        updatedTasks.push({
+          ...t,
+          completed: false,
+          dueDate: getNextDate(t.dueDate, t.recurrence) || ''
+        });
+      }
+      return updatedTasks;
+    });
   };
 
   // Helper: Get if task is overdue or upcoming
@@ -39,9 +82,6 @@ const App: React.FC = () => {
     const hoursDiff = (due.getTime() - now.getTime()) / (1000 * 60 * 60);
     return hoursDiff < 24 ? 'upcoming' : null;
   };
-
-  // Placeholder: automated reminders for soon due tasks
-  // In production, use Electron Notifications or native alerts
 
   return (
     <div>
@@ -69,6 +109,12 @@ const App: React.FC = () => {
         onChange={e => setDueDateInput(e.target.value)}
         placeholder="Due date"
       />
+      <select value={recurrenceInput} onChange={e => setRecurrenceInput(e.target.value)}>
+        <option value="none">One-time</option>
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+      </select>
       <button onClick={addTask}>Add Task</button>
       <ul>
         {tasks.map((task, index) => {
@@ -76,12 +122,11 @@ const App: React.FC = () => {
           return (
             <li
               key={index}
-              className={`priority-${task.priority.toLowerCase()} ${dueStatus ? dueStatus : ''}`.trim()}
+              className={`priority-${task.priority.toLowerCase()} ${dueStatus ? dueStatus : ''} ${task.completed ? 'completed' : ''}`.trim()}
             >
               <span>{task.text}</span>
               {task.category ? <span> • {task.category}</span> : null}
-              <span> • </span>
-              <span>{task.priority}</span>
+              <span> • {task.priority}</span>
               {task.dueDate && (
                 <span>
                   {' • '}Due: {task.dueDate}
@@ -89,6 +134,11 @@ const App: React.FC = () => {
                   {dueStatus === 'upcoming' ? <span className="upcoming"> (Due Soon)</span> : null}
                 </span>
               )}
+              {task.recurrence && task.recurrence !== 'none' ? (
+                <span> • {task.recurrence.charAt(0).toUpperCase() + task.recurrence.slice(1)} Task</span>
+              ) : null}
+              {!task.completed && <button onClick={() => completeTask(index)}>Mark Complete</button>}
+              {task.completed && <span className="completed"> (Complete)</span>}
             </li>
           );
         })}
