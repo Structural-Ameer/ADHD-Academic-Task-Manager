@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
 import './App.css';
+import { Pie } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface Task {
   text: string;
@@ -30,12 +39,10 @@ function getNextDate(current: string, recurrence: string): string | null {
   return d.toISOString().split('T')[0];
 }
 
-// Get streak for a daily recurring task
 function getStreak(dates: string[]) {
   if (!dates.length) return 0;
   const today = new Date();
   let streak = 0;
-  // Count back from today
   for (let i = dates.length - 1; i >= 0; --i) {
     const date = new Date(dates[i]);
     const diff = Math.floor((today.getTime() - date.getTime()) / 1000 / 3600 / 24);
@@ -56,13 +63,44 @@ const App: React.FC = () => {
   const [dueDateInput, setDueDateInput] = useState('');
   const [recurrenceInput, setRecurrenceInput] = useState('none');
 
+  const todayStr = new Date().toISOString().slice(0, 10);
+
   // Progress stats
   const completedToday = tasks.filter(
-    t => t.completed && t.completionDates?.some(date => date === new Date().toISOString().slice(0, 10))
+    t => t.completed && t.completionDates?.some(date => date === todayStr)
   ).length;
   const totalToday = tasks.filter(
-    t => (!t.completed || t.recurrence !== 'none') && (!t.dueDate || t.dueDate === new Date().toISOString().slice(0, 10))
+    t => (!t.completed || t.recurrence !== 'none') && (!t.dueDate || t.dueDate === todayStr)
   ).length;
+  const remainingToday = Math.max(0, totalToday - completedToday);
+
+  // Pie chart data for dashboard
+  const pieData = {
+    labels: ['Completed', 'Remaining'],
+    datasets: [
+      {
+        label: 'Tasks',
+        data: [completedToday, remainingToday],
+        backgroundColor: [
+          '#87cbb9',
+          '#e3e4fa',
+        ],
+        borderColor: [
+          '#87cbb9',
+          '#e3e4fa',
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  // Pie chart options
+  const pieOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom' as const },
+    },
+  };
 
   const addTask = () => {
     if (taskInput) {
@@ -87,11 +125,9 @@ const App: React.FC = () => {
   const completeTask = (i: number) => {
     setTasks(tasks => {
       const t = tasks[i];
-      const todayStr = new Date().toISOString().slice(0, 10);
       const updatedTasks = tasks.slice();
       updatedTasks[i] = { ...t, completed: true, completionDates: [...(t.completionDates || []), todayStr] };
       if (t.recurrence && t.recurrence !== 'none' && t.dueDate) {
-        // Schedule new instance
         updatedTasks.push({
           ...t,
           completed: false,
@@ -103,7 +139,6 @@ const App: React.FC = () => {
     });
   };
 
-  // Helper: Get if task is overdue or upcoming
   const getDueStatus = (dueDate?: string) => {
     if (!dueDate) return null;
     const due = new Date(dueDate);
@@ -113,7 +148,6 @@ const App: React.FC = () => {
     return hoursDiff < 24 ? 'upcoming' : null;
   };
 
-  // Find the top streak for daily tasks
   const getTopStreak = () => {
     return Math.max(...tasks.filter(t=>t.recurrence==='daily').map(t=>getStreak(t.completionDates||[])), 0)
   };
@@ -121,8 +155,9 @@ const App: React.FC = () => {
   return (
     <div>
       <h1>Task Manager</h1>
-      {/* Dashboard / Progress Section */}
+      {/* Dashboard with Pie Chart */}
       <div className="dashboard">
+        <Pie data={pieData} options={pieOptions} style={{maxWidth:'300px',margin:'0 auto 1.2rem auto'}} />
         <p><strong>Tasks Today:</strong> {totalToday}</p>
         <p><strong>Completed Today:</strong> {completedToday}</p>
         <p><strong>Completion %:</strong> {totalToday ? Math.round(100 * completedToday / totalToday) : 0}%</p>
@@ -179,7 +214,6 @@ const App: React.FC = () => {
               {task.recurrence && task.recurrence !== 'none' ? (
                 <span> • {task.recurrence.charAt(0).toUpperCase() + task.recurrence.slice(1)} Task</span>
               ) : null}
-              {/* Streak (only for daily recurring tasks) */}
               {task.recurrence === 'daily' ? (
                 <span> • Streak: {getStreak(task.completionDates || [])} days</span>
               ) : null}
