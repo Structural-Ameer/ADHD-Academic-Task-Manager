@@ -1,0 +1,115 @@
+/* Calming color palette for ADHD-friendly UI */
+:root {
+  --primary-bg: #eef6fb;
+  --secondary-bg: #e3e4fa;
+  --primary-accent: #7e9cd6;
+  --secondary-accent: #baaecf;
+  --success: #87cbb9;
+  --warning: #ffdfba;
+  --danger: #f38181;
+  --font-main: #283149;
+  --font-subtle: #6b778d;
+}
+
+body, html, .app {
+  background: linear-gradient(120deg, var(--primary-bg) 60%, var(--secondary-bg) 100%);
+  min-height: 100vh;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  color: var(--font-main);
+}
+
+.app-header {
+  background-color: var(--primary-accent);
+  color: white;
+  border-radius: 0 0 15px 15px;
+  padding: 1.5rem 2rem 1rem 2rem;
+  box-shadow: 0 4px 10px 0 #c9daf8;
+  text-align: center;
+}
+
+.app-header h1 {
+  margin: 0 0 0.3rem 0;
+  font-size: 2.4rem;
+  letter-spacing: 2px;
+}
+
+.timer {
+  margin: 1rem 0;
+  background: var(--secondary-accent);
+  border-radius: 8px;
+  padding: 0.8rem 1.5rem;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 2px 4px #d2c1eb40;
+  display: inline-block;
+}
+
+.main-content {
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+task-input {
+  display: flex;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.task-input input {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--primary-accent);
+  font-size: 1rem;
+  outline: none;
+  background: #fff;
+  color: var(--font-main);
+}
+
+.task-input button {
+  background: var(--success);
+  color: #fff;
+  padding: 0.7rem 1.4rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.task-input button:hover {
+  background: var(--primary-accent);
+}
+
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 8px #b6b1c571;
+  min-height: 60px;
+}
+
+.task-list li {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid #eee;
+  color: var(--font-main);
+  background: transparent;
+  font-size: 1.14rem;
+  transition: background 0.18s;
+}
+
+.task-list li:last-of-type {
+  border-bottom: none;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem 0.5rem;
+  }
+}
