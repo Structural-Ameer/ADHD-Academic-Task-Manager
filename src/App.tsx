@@ -1,64 +1,57 @@
 import React, { useState } from 'react';
-import './App.css'; // Importing the CSS styles
+import './App.css';
 
-const App = () => {
-  // State variables for task management
-  const [tasks, setTasks] = useState([]);
+interface Task {
+  text: string;
+  priority: string;
+  category: string;
+}
+
+const App: React.FC = () => {
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [taskInput, setTaskInput] = useState('');
+  const [priorityInput, setPriorityInput] = useState('Medium');
+  const [categoryInput, setCategoryInput] = useState('');
 
-  // State variables for timer
-  const [time, setTime] = useState(0);
-  const [isActive, setIsActive] = useState(false);
-
-  // Function to add a new task
   const addTask = () => {
     if (taskInput) {
-      setTasks([...tasks, taskInput]);
+      const newTask: Task = {
+        text: taskInput,
+        priority: priorityInput,
+        category: categoryInput,
+      };
+      setTasks([...tasks, newTask]);
       setTaskInput('');
+      setCategoryInput('');
     }
   };
-
-  // Function to start and stop the timer
-  const toggleTimer = () => {
-    setIsActive(!isActive);
-  };
-
-  // Effect to manage timer
-  React.useEffect(() => {
-    let interval;
-    if (isActive) {
-      interval = setInterval(() => {
-        setTime(prevTime => prevTime + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isActive]);
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>Task Manager</h1>
-        <div className="timer">
-          <h2>Timer: {time} seconds</h2>
-          <button onClick={toggleTimer}>{isActive ? 'Pause' : 'Start'}</button>
-        </div>
-      </header>
-      <main className="main-content">
-        <div className="task-input">
-          <input 
-            type="text" 
-            value={taskInput} 
-            onChange={(e) => setTaskInput(e.target.value)} 
-            placeholder="Add a new task..." 
-          />
-          <button onClick={addTask}>Add Task</button>
-        </div>
-        <ul className="task-list">
-          {tasks.map((task, index) => (
-            <li key={index}>{task}</li>
-          ))}
-        </ul>
-      </main>
+    <div>
+      <h1>Task Manager</h1>
+      <input
+        type="text"
+        value={taskInput}
+        onChange={(e) => setTaskInput(e.target.value)}
+        placeholder="Add a task"
+      />
+      <select onChange={(e) => setPriorityInput(e.target.value)} value={priorityInput}>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+      <input
+        type="text"
+        value={categoryInput}
+        onChange={(e) => setCategoryInput(e.target.value)}
+        placeholder="Category"
+      />
+      <button onClick={addTask}>Add Task</button>
+      <ul>
+        {tasks.map((task, index) => (
+          <li key={index} className={`priority-${task.priority.toLowerCase()}`}>{task.text} - {task.category} - <span>{task.priority}</span></li>
+        ))}
+      </ul>
     </div>
   );
 };
